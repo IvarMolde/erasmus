@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordkjede – norsk, italiensk, slovensk</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+  .app { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+  h1 { font-size: 20px; font-weight: 500; color: #1a1a1a; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+
+  .instr-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .instr-card { border-radius: 10px; padding: 12px 14px; border: 0.5px solid; }
+  .instr-card.no { background: #EEEDFE; border-color: #AFA9EC; }
+  .instr-card.it { background: #FAECE7; border-color: #F0997B; }
+  .instr-card.si { background: #E1F5EE; border-color: #5DCAA5; }
+  .instr-flag { font-size: 18px; margin-bottom: 4px; }
+  .instr-lang { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+  .instr-card.no .instr-lang { color: #3C3489; }
+  .instr-card.it .instr-lang { color: #712B13; }
+  .instr-card.si .instr-lang { color: #085041; }
+  .instr-text { font-size: 13px; line-height: 1.5; }
+  .instr-card.no .instr-text { color: #534AB7; }
+  .instr-card.it .instr-text { color: #993C1D; }
+  .instr-card.si .instr-text { color: #0F6E56; }
+
+  .progress-row { display: flex; gap: 8px; align-items: center; margin-bottom: 1rem; }
+  .progress-track { flex: 1; height: 5px; background: #ddd; border-radius: 3px; }
+  .progress-fill { height: 5px; background: #7F77DD; border-radius: 3px; transition: width 0.4s; }
+  .progress-txt { font-size: 12px; color: #999; min-width: 44px; text-align: right; }
+
+  .word-stage { text-align: center; padding: 2rem 1rem; background: white; border-radius: 14px; border: 0.5px solid #e0e0e0; margin-bottom: 1.25rem; }
+  .word-emoji { font-size: 52px; margin-bottom: 10px; line-height: 1; }
+  .word-question { font-size: 15px; color: #888; margin-bottom: 6px; }
+
+  .lang-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .lang-card { border-radius: 12px; border: 0.5px solid #e0e0e0; background: white; overflow: hidden; }
+  .lang-header { padding: 9px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 0.5px solid #e8e8e8; }
+  .lang-flag { font-size: 16px; }
+  .lang-name { font-size: 12px; font-weight: 600; color: #555; }
+  .lang-body { padding: 12px; }
+  .lang-input { width: 100%; font-size: 16px; border: 0.5px solid #ccc; border-radius: 8px; padding: 7px 10px; background: white; color: #1a1a1a; outline: none; }
+  .lang-input:focus { border-color: #7F77DD; box-shadow: 0 0 0 2px #CECBF6; }
+  .reveal-btn { width: 100%; margin-top: 8px; padding: 7px; font-size: 12px; border-radius: 8px; border: 0.5px solid #ccc; background: transparent; color: #666; cursor: pointer; }
+  .reveal-btn:hover { background: #f5f5f0; }
+  .ans-display { margin-top: 8px; font-size: 18px; font-weight: 500; min-height: 26px; display: none; }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .next-btn { padding: 10px 22px; border-radius: 10px; border: 0.5px solid #AFA9EC; background: #EEEDFE; color: #3C3489; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .next-btn:hover { background: #CECBF6; }
+  .next-btn:disabled { opacity: 0.4; cursor: default; }
+  .reset-btn { padding: 10px 22px; border-radius: 10px; border: 0.5px solid #ccc; background: transparent; color: #666; font-size: 14px; cursor: pointer; }
+  .reset-btn:hover { background: #ebebeb; }
+
+  .chain-section { margin-bottom: 1.5rem; }
+  .chain-label { font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px; }
+  .chain-scroll { display: flex; gap: 10px; flex-wrap: wrap; min-height: 60px; padding: 12px; background: white; border-radius: 12px; border: 0.5px solid #e0e0e0; align-items: flex-start; }
+  .chain-group { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .chain-emoji { font-size: 20px; line-height: 1; }
+  .chain-arrow { color: #bbb; font-size: 18px; padding: 0 2px; align-self: center; margin-top: 10px; }
+  .chip { padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 0.5px solid; }
+  .chip-no { background: #EEEDFE; color: #3C3489; border-color: #AFA9EC; }
+  .chip-it { background: #FAECE7; color: #712B13; border-color: #F0997B; }
+  .chip-si { background: #E1F5EE; color: #085041; border-color: #5DCAA5; }
+  .chain-empty { font-size: 13px; color: #bbb; font-style: italic; align-self: center; }
+
+  .done-msg { text-align: center; padding: 2rem; background: #E1F5EE; border-radius: 14px; border: 0.5px solid #5DCAA5; margin-bottom: 1.5rem; }
+  .done-msg h2 { font-size: 22px; font-weight: 500; color: #085041; margin-bottom: 6px; }
+  .done-msg p { font-size: 14px; color: #0F6E56; margin-bottom: 1rem; }
+  .draw-round-btn { padding: 12px 28px; border-radius: 10px; border: none; background: #1D9E75; color: white; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .draw-round-btn:hover { background: #0F6E56; }
+
+  /* ── TEGNERUNDE ── */
+  #drawRound { display: none; }
+
+  .draw-instr-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+
+  .draw-word-display { text-align: center; padding: 1.75rem 1rem; background: white; border-radius: 14px; border: 0.5px solid #e0e0e0; margin-bottom: 1.25rem; }
+  .draw-word-text { font-size: 44px; font-weight: 500; color: #1a1a1a; letter-spacing: -1px; }
+  .draw-word-sub { font-size: 13px; color: #aaa; margin-top: 6px; }
+
+  .timer-ring-wrap { display: flex; justify-content: center; align-items: center; margin-bottom: 1.25rem; gap: 1.5rem; flex-wrap: wrap; }
+  .timer-svg { transform: rotate(-90deg); }
+  .timer-bg { fill: none; stroke: #e8e8e8; stroke-width: 6; }
+  .timer-arc { fill: none; stroke: #1D9E75; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+  .timer-num { font-size: 32px; font-weight: 600; color: #1a1a1a; min-width: 60px; text-align: center; }
+  .timer-label-txt { font-size: 12px; color: #aaa; }
+
+  .draw-controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .start-timer-btn { padding: 11px 26px; border-radius: 10px; border: none; background: #1D9E75; color: white; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .start-timer-btn:hover { background: #0F6E56; }
+  .start-timer-btn:disabled { opacity: 0.4; cursor: default; }
+  .skip-word-btn { padding: 11px 20px; border-radius: 10px; border: 0.5px solid #ccc; background: transparent; color: #666; font-size: 14px; cursor: pointer; }
+  .skip-word-btn:hover { background: #ebebeb; }
+
+  .draw-canvas-wrap { border-radius: 14px; border: 0.5px solid #e0e0e0; background: white; overflow: hidden; margin-bottom: 1rem; }
+  .draw-toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 0.5px solid #e8e8e8; flex-wrap: wrap; }
+  .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; flex-shrink: 0; }
+  .color-dot.sel { border-color: #333; }
+  .sz-btn { padding: 3px 10px; font-size: 12px; border-radius: 8px; border: 0.5px solid #ccc; background: transparent; color: #555; cursor: pointer; }
+  .sz-btn.sel { background: #eee; color: #111; }
+  .clear-draw-btn { margin-left: auto; padding: 4px 12px; font-size: 12px; border-radius: 8px; border: 0.5px solid #ccc; background: transparent; color: #666; cursor: pointer; }
+  .draw-canvas { width: 100%; height: 280px; display: block; cursor: crosshair; touch-action: none; }
+
+  .show-now-box { text-align: center; padding: 1.5rem; background: #FFF3CD; border-radius: 14px; border: 0.5px solid #EF9F27; margin-bottom: 1.25rem; display: none; }
+  .show-now-box h3 { font-size: 20px; font-weight: 500; color: #633806; margin-bottom: 6px; }
+  .show-now-box p { font-size: 13px; color: #854F0B; }
+
+  .draw-progress { font-size: 13px; color: #888; text-align: center; margin-bottom: 0.75rem; }
+
+  .draw-done-msg { text-align: center; padding: 2rem; background: #EEEDFE; border-radius: 14px; border: 0.5px solid #AFA9EC; margin-bottom: 1.5rem; display: none; }
+  .draw-done-msg h2 { font-size: 22px; font-weight: 500; color: #3C3489; margin-bottom: 8px; }
+  .draw-done-msg p { font-size: 14px; color: #534AB7; }
+
+  @media (max-width: 600px) {
+    .instr-bar, .lang-row, .draw-instr-bar { grid-template-columns: 1fr; }
+    .draw-word-text { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══ RUNDE 1: ORDKJEDE ══ -->
+  <div id="round1">
+    <h1>Ordkjede</h1>
+    <p class="subtitle">Norsk · Italiano · Slovenščina</p>
+
+    <div class="instr-bar">
+      <div class="instr-card no">
+        <div class="instr-flag">🇳🇴</div>
+        <div class="instr-lang">Norsk (A2)</div>
+        <div class="instr-text">Se bildet. Skriv det norske ordet – husk artikkelen (en/ei/et)!</div>
+      </div>
+      <div class="instr-card it">
+        <div class="instr-flag">🇮🇹</div>
+        <div class="instr-lang">Italiano</div>
+        <div class="instr-text">Guarda l'immagine. Scrivi la parola in italiano con l'articolo.</div>
+      </div>
+      <div class="instr-card si">
+        <div class="instr-flag">🇸🇮</div>
+        <div class="instr-lang">Slovenščina</div>
+        <div class="instr-text">Poglej sliko. Napiši besedo v slovenščini s členom.</div>
+      </div>
+    </div>
+
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="pFill" style="width:10%"></div></div>
+      <div class="progress-txt" id="pTxt">1 / 10</div>
+    </div>
+
+    <div id="gameArea">
+      <div class="word-stage">
+        <div class="word-emoji" id="wEmoji">☀️</div>
+        <div class="word-question">Hva er dette? / Cos'è? / Kaj je to?</div>
+      </div>
+
+      <div class="lang-row">
+        <div class="lang-card">
+          <div class="lang-header"><span class="lang-flag">🇳🇴</span><span class="lang-name">Skriv på norsk</span></div>
+          <div class="lang-body">
+            <input class="lang-input" id="inputNO" type="text" placeholder="en/ei/et …" autocomplete="off" spellcheck="false">
+            <button class="reveal-btn" onclick="reveal('NO')">Vis fasit</button>
+            <div class="ans-display" id="ansNO" style="color:#3C3489"></div>
+          </div>
+        </div>
+        <div class="lang-card">
+          <div class="lang-header"><span class="lang-flag">🇮🇹</span><span class="lang-name">Scrivi in italiano</span></div>
+          <div class="lang-body">
+            <input class="lang-input" id="inputIT" type="text" placeholder="un/una …" autocomplete="off" spellcheck="false">
+            <button class="reveal-btn" onclick="reveal('IT')">Mostra risposta</button>
+            <div class="ans-display" id="ansIT" style="color:#712B13"></div>
+          </div>
+        </div>
+        <div class="lang-card">
+          <div class="lang-header"><span class="lang-flag">🇸🇮</span><span class="lang-name">Napiši v slovenščini</span></div>
+          <div class="lang-body">
+            <input class="lang-input" id="inputSI" type="text" placeholder="slovensko …" autocomplete="off" spellcheck="false">
+            <button class="reveal-btn" onclick="reveal('SI')">Pokaži odgovor</button>
+            <div class="ans-display" id="ansSI" style="color:#085041"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="next-btn" id="nextBtn" onclick="addToChain()">Legg til kjede og neste ord →</button>
+        <button class="reset-btn" onclick="resetAll()">Start på nytt / Ricomincia / Začni znova</button>
+      </div>
+    </div>
+
+    <div id="doneMsg" class="done-msg" style="display:none">
+      <h2>🎉 Bra jobbet! / Ottimo! / Odlično!</h2>
+      <p>Dere har gått gjennom alle ordene. Se kjeden nedenfor – klar for tegnerunden?</p>
+      <button class="draw-round-btn" onclick="startDrawRound()">✏️ Start tegnerunden / Inizia il disegno / Začni risanje</button>
+    </div>
+
+    <div class="chain-section">
+      <div class="chain-label">Ordkjeden / La catena / Veriga besed</div>
+      <div class="chain-scroll" id="chainRow">
+        <span class="chain-empty">Kjeden er tom – start med første ord!</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══ RUNDE 2: TEGNERUNDEN ══ -->
+  <div id="drawRound">
+
+    <h1>✏️ Tegnerunden</h1>
+    <p class="subtitle">Du ser ordet – tegn det på 30 sekunder!</p>
+
+    <div class="draw-instr-bar">
+      <div class="instr-card no">
+        <div class="instr-flag">🇳🇴</div>
+        <div class="instr-lang">Norsk (A2)</div>
+        <div class="instr-text">Les ordet. Tegn det du ser! Du har 30 sekunder. Vis tegningen til klassen etterpå.</div>
+      </div>
+      <div class="instr-card it">
+        <div class="instr-flag">🇮🇹</div>
+        <div class="instr-lang">Italiano</div>
+        <div class="instr-text">Leggi la parola. Disegna quello che vedi! Hai 30 secondi. Poi mostra il disegno alla classe.</div>
+      </div>
+      <div class="instr-card si">
+        <div class="instr-flag">🇸🇮</div>
+        <div class="instr-lang">Slovenščina</div>
+        <div class="instr-text">Preberi besedo. Nariši, kar vidiš! Imaš 30 sekund. Potem pokaži risbo razredu.</div>
+      </div>
+    </div>
+
+    <div class="draw-progress" id="drawProgress">Ord 1 av 10</div>
+
+    <div id="drawWordDisplay" class="draw-word-display">
+      <div class="draw-word-text" id="drawWordText">en sol</div>
+      <div class="draw-word-sub">Les ordet – deretter tegn!</div>
+    </div>
+
+    <div id="showNowBox" class="show-now-box">
+      <h3>⏰ Tiden er ute! Vis tegningen!</h3>
+      <p>Alle viser tegningen sin til klassen nå.<br>
+         Tutti mostrano il disegno alla classe adesso.<br>
+         Vsi pokažejo risbo razredu zdaj.</p>
+    </div>
+
+    <div class="timer-ring-wrap">
+      <div>
+        <svg class="timer-svg" width="80" height="80" viewBox="0 0 80 80">
+          <circle class="timer-bg" cx="40" cy="40" r="34"/>
+          <circle class="timer-arc" id="timerArc" cx="40" cy="40" r="34"
+            stroke-dasharray="213.6" stroke-dashoffset="0"/>
+        </svg>
+      </div>
+      <div style="text-align:center">
+        <div class="timer-num" id="timerNum">30</div>
+        <div class="timer-label-txt">sekunder</div>
+      </div>
+    </div>
+
+    <div class="draw-controls">
+      <button class="start-timer-btn" id="startTimerBtn" onclick="startCountdown()">▶ Start nedtelling</button>
+      <button class="skip-word-btn" id="skipWordBtn" onclick="nextDrawWord()">Neste ord →</button>
+      <button class="reset-btn" onclick="resetDrawRound()">Start tegnerunden på nytt</button>
+    </div>
+
+    <div class="draw-canvas-wrap">
+      <div class="draw-toolbar" id="drawToolbar">
+        <div class="color-dot sel" style="background:#222" onclick="setDCol('#222',this)"></div>
+        <div class="color-dot" style="background:#E24B4A" onclick="setDCol('#E24B4A',this)"></div>
+        <div class="color-dot" style="background:#378ADD" onclick="setDCol('#378ADD',this)"></div>
+        <div class="color-dot" style="background:#1D9E75" onclick="setDCol('#1D9E75',this)"></div>
+        <div class="color-dot" style="background:#EF9F27" onclick="setDCol('#EF9F27',this)"></div>
+        <div class="color-dot" style="background:#D4537E" onclick="setDCol('#D4537E',this)"></div>
+        <div class="color-dot" style="background:#f5f5f0" onclick="setDCol('#f5f5f0',this)"></div>
+        <button class="sz-btn sel" onclick="setDSz(3,this)">S</button>
+        <button class="sz-btn" onclick="setDSz(8,this)">M</button>
+        <button class="sz-btn" onclick="setDSz(16,this)">L</button>
+        <button class="clear-draw-btn" onclick="clearDrawCanvas()">Slett / Clear</button>
+      </div>
+      <canvas class="draw-canvas" id="drawCanvas"></canvas>
+    </div>
+
+    <div id="drawDoneMsg" class="draw-done-msg">
+      <h2>🎨 Tegnerunden er ferdig!</h2>
+      <p>Bra jobbet alle sammen!<br>
+         Bravo a tutti! / Bravo vsem!</p>
+      <br>
+      <button class="reset-btn" onclick="resetAll()">Start helt på nytt / Ricomincia tutto / Začni vse znova</button>
+    </div>
+
+  </div><!-- /drawRound -->
+
+</div><!-- /app -->
+
+<script>
+const words = [
+  { no: 'en sol',     it: 'il sole',      si: 'sonce',   emoji: '☀️' },
+  { no: 'et hus',     it: 'una casa',     si: 'hiša',    emoji: '🏠' },
+  { no: 'en sykkel',   it: 'una bicicletta', si: 'kolo',    emoji: '🚲' },
+  { no: 'et barn',    it: 'un bambino',   si: 'otrok',   emoji: '👦' },
+  { no: 'en jobb',    it: 'un lavoro',    si: 'delo',    emoji: '💼' },
+  { no: 'en bil',     it: 'una macchina', si: 'avto',    emoji: '🚗' },
+  { no: 'en skole',   it: 'una scuola',   si: 'šola',    emoji: '🏫' },
+  { no: 'et vann',    it: "l'acqua",      si: 'voda',    emoji: '💧' },
+  { no: 'en fisk',    it: 'un pesce',     si: 'riba',    emoji: '🐟' },
+  { no: 'en snø',     it: 'la neve',      si: 'sneg',    emoji: '❄️' },
+];
+
+/* ── RUNDE 1 ── */
+let idx = 0;
+const chain = [];
+
+function showWord() {
+  const w = words[idx];
+  document.getElementById('wEmoji').textContent = w.emoji;
+  ['NO','IT','SI'].forEach(lang => {
+    const inp = document.getElementById('input' + lang);
+    const ans = document.getElementById('ans' + lang);
+    inp.value = ''; inp.className = 'lang-input'; inp.disabled = false;
+    ans.style.display = 'none'; ans.textContent = '';
+  });
+  const pct = Math.round(((idx + 1) / words.length) * 100);
+  document.getElementById('pFill').style.width = pct + '%';
+  document.getElementById('pTxt').textContent = (idx + 1) + ' / ' + words.length;
+  document.getElementById('nextBtn').disabled = false;
+  document.getElementById('gameArea').style.display = 'block';
+  document.getElementById('doneMsg').style.display = 'none';
+}
+
+function reveal(lang) {
+  const w = words[idx];
+  const key = lang.toLowerCase();
+  const ans = document.getElementById('ans' + lang);
+  const inp = document.getElementById('input' + lang);
+  ans.textContent = w[key];
+  ans.style.display = 'block';
+  inp.disabled = true;
+}
+
+function addToChain() {
+  const w = words[idx];
+  const noVal = document.getElementById('inputNO').value.trim() || w.no;
+  const itVal = document.getElementById('inputIT').value.trim() || w.it;
+  const siVal = document.getElementById('inputSI').value.trim() || w.si;
+  chain.push({ no: noVal, it: itVal, si: siVal, emoji: w.emoji });
+  renderChain();
+  if (idx < words.length - 1) {
+    idx++;
+    showWord();
+  } else {
+    document.getElementById('gameArea').style.display = 'none';
+    document.getElementById('doneMsg').style.display = 'block';
+    document.getElementById('pFill').style.width = '100%';
+    document.getElementById('pTxt').textContent = words.length + ' / ' + words.length;
+  }
+}
+
+function renderChain() {
+  const row = document.getElementById('chainRow');
+  row.innerHTML = '';
+  chain.forEach((item, i) => {
+    if (i > 0) {
+      const arr = document.createElement('span');
+      arr.className = 'chain-arrow'; arr.textContent = '→';
+      row.appendChild(arr);
+    }
+    const g = document.createElement('div'); g.className = 'chain-group';
+    const em = document.createElement('span'); em.className = 'chain-emoji'; em.textContent = item.emoji;
+    g.appendChild(em);
+    [['no','chip-no'],['it','chip-it'],['si','chip-si']].forEach(([lang,cls]) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip ' + cls; chip.textContent = item[lang];
+      g.appendChild(chip);
+    });
+    row.appendChild(g);
+  });
+}
+
+function resetAll() {
+  idx = 0; chain.length = 0;
+  document.getElementById('chainRow').innerHTML = '<span class="chain-empty">Kjeden er tom – start med første ord!</span>';
+  document.getElementById('round1').style.display = 'block';
+  document.getElementById('drawRound').style.display = 'none';
+  showWord();
+  resetDrawRound();
+}
+
+/* ── RUNDE 2: TEGNERUNDEN ── */
+let drawIdx = 0;
+let countdown = null;
+let secondsLeft = 30;
+const TOTAL = 30;
+const CIRC = 2 * Math.PI * 34;
+
+function startDrawRound() {
+  document.getElementById('round1').style.display = 'none';
+  document.getElementById('drawRound').style.display = 'block';
+  drawIdx = 0;
+  showDrawWord();
+  initDrawCanvas();
+}
+
+function showDrawWord() {
+  const w = words[drawIdx];
+  document.getElementById('drawWordText').textContent = w.no;
+  document.getElementById('drawProgress').textContent = 'Ord ' + (drawIdx + 1) + ' av ' + words.length + ' / Parola ' + (drawIdx + 1) + ' di ' + words.length;
+  document.getElementById('showNowBox').style.display = 'none';
+  document.getElementById('drawDoneMsg').style.display = 'none';
+  document.getElementById('drawWordDisplay').style.display = 'block';
+  document.getElementById('startTimerBtn').disabled = false;
+  document.getElementById('skipWordBtn').disabled = false;
+  resetTimerDisplay();
+  clearDrawCanvas();
+}
+
+function resetTimerDisplay() {
+  secondsLeft = TOTAL;
+  document.getElementById('timerNum').textContent = TOTAL;
+  document.getElementById('timerNum').style.color = '#1a1a1a';
+  const arc = document.getElementById('timerArc');
+  arc.style.strokeDashoffset = '0';
+  arc.style.stroke = '#1D9E75';
+}
+
+function startCountdown() {
+  if (countdown) clearInterval(countdown);
+  document.getElementById('startTimerBtn').disabled = true;
+  secondsLeft = TOTAL;
+  const arc = document.getElementById('timerArc');
+
+  countdown = setInterval(() => {
+    secondsLeft--;
+    document.getElementById('timerNum').textContent = secondsLeft;
+    const offset = CIRC * (1 - secondsLeft / TOTAL);
+    arc.style.strokeDashoffset = offset;
+
+    if (secondsLeft <= 10) {
+      arc.style.stroke = '#E24B4A';
+      document.getElementById('timerNum').style.color = '#E24B4A';
+    }
+    if (secondsLeft <= 0) {
+      clearInterval(countdown);
+      countdown = null;
+      document.getElementById('timerNum').textContent = '0';
+      document.getElementById('showNowBox').style.display = 'block';
+      document.getElementById('drawWordDisplay').style.display = 'none';
+    }
+  }, 1000);
+}
+
+function nextDrawWord() {
+  if (countdown) { clearInterval(countdown); countdown = null; }
+  drawIdx++;
+  if (drawIdx < words.length) {
+    showDrawWord();
+  } else {
+    document.getElementById('drawWordDisplay').style.display = 'none';
+    document.getElementById('showNowBox').style.display = 'none';
+    document.getElementById('drawDoneMsg').style.display = 'block';
+    document.getElementById('startTimerBtn').disabled = true;
+    document.getElementById('skipWordBtn').disabled = true;
+    resetTimerDisplay();
+  }
+}
+
+function resetDrawRound() {
+  if (countdown) { clearInterval(countdown); countdown = null; }
+  drawIdx = 0;
+  resetTimerDisplay();
+  clearDrawCanvas();
+  document.getElementById('showNowBox').style.display = 'none';
+  document.getElementById('drawDoneMsg').style.display = 'none';
+  if (document.getElementById('drawRound').style.display !== 'none') showDrawWord();
+}
+
+/* ── CANVAS ── */
+let dColor = '#222', dSize = 3, dDrawing = false;
+
+function initDrawCanvas() {
+  const c = document.getElementById('drawCanvas');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = c.getBoundingClientRect();
+  c.width = Math.round(rect.width * dpr);
+  c.height = Math.round(280 * dpr);
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  function getPos(e) {
+    const r = c.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  }
+  c.onmousedown = c.ontouchstart = (e) => {
+    e.preventDefault(); dDrawing = true;
+    const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
+  };
+  c.onmousemove = c.ontouchmove = (e) => {
+    if (!dDrawing) return; e.preventDefault();
+    const p = getPos(e);
+    ctx.strokeStyle = dColor; ctx.lineWidth = dSize;
+    ctx.lineTo(p.x, p.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(p.x, p.y);
+  };
+  c.onmouseup = c.ontouchend = c.onmouseleave = () => { dDrawing = false; };
+}
+
+function clearDrawCanvas() {
+  const c = document.getElementById('drawCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+}
+
+function setDCol(col, el) {
+  dColor = col;
+  document.querySelectorAll('#drawToolbar .color-dot').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function setDSz(sz, el) {
+  dSize = sz;
+  document.querySelectorAll('#drawToolbar .sz-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+showWord();
+</script>
+</body>
+</html>
